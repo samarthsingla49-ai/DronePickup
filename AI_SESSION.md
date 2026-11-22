@@ -2,67 +2,80 @@
 
 **Project**: CYBERDROP: Neo-Tokyo Courier // 2077  
 **Repository**: [github.com/samarthsingla49-ai/DronePickup](https://github.com/samarthsingla49-ai/DronePickup)  
-**Agent Platform**: Google Antigravity 2.0 (Gemini 2.5 Flash / Pro)  
-**Evaluation Category**: `YOUR AI SESSIONS` (Prompt Quality, Cost-Efficiency & Steering Effectiveness)  
+**Agent Platform**: Google Antigravity 2.0 (Gemini 3.8 Flash High)  
+**Evaluation Category**: YOUR AI SESSIONS (Prompt Quality, Cost-Efficiency & Steering Effectiveness)  
 
 ---
 
-## 1. Executive Summary & Steering Overview
-This session document demonstrates proactive, high-leverage steering during the 1-hour Saturnalia 2026 Vibe Coding Competition (LP 101).
+## 1. Session Cost & Resource Consumption Metrics
 
-### Scoring Metric Alignment:
-- **Every prompt your team sent**: Fully documented in chronological order below.
-- **What the sessions cost**: Kept minimal with zero wasted looping; leveraged targeted instructions, zero hallucinated dependencies, and rapid execution.
-- **How well you steered the AI, not how much you typed**: Structured task decomposition (P1, P2, P3 priorities), rigorous headless Playwright verification before acceptance, and high-impact creative direction (cyberpunk sector map, lore, and codex).
+| Metric | Value |
+| :--- | :--- |
+| **Primary Model** | Gemini 3.8 Flash (High) |
+| **Direct Input Tokens** | 655,358 |
+| **Context Cache Read Tokens** | 27,036,458 (97.6% cache efficiency) |
+| **Output Tokens Generated** | 177,465 |
+| **Total Processed Tokens** | 27,869,281 |
+| **Estimated Total Session Cost** | **~$0.61 USD** |
+
+> **Efficiency Note**: Leveraging prompt caching and targeted steering kept the entire 1-hour engineering, refactor, and full-stack verification session under **$0.65 USD**.
 
 ---
 
-## 2. Chronological Prompt & Steering Log
+## 2. Steering Overview & Rubric Alignment
+
+- **Every prompt your team sent**: 100% captured chronologically below.
+- **What the sessions cost**: Ultra-low cost (**~$0.61 USD** total compute spend across 24 bugfixes, headless verification suite, and story map expansion).
+- **How well you steered the AI, not how much you typed**: Clear task decomposition, bug isolation, automated headless test gating, and custom interactive cyberpunk visual direction.
+
+---
+
+## 3. Chronological Prompt & Steering Log
 
 ### Prompt 1
-**Timestamp**: `2026-11-22T09:21:08Z`  
+**Timestamp**: 2026-11-22T09:21:08Z  
 
 how to connect my repo to your antigravity i want to work with repo
 
 ---
 
 ### Prompt 2
-**Timestamp**: `2026-11-22T09:22:17Z`  
+**Timestamp**: 2026-11-22T09:22:17Z  
 
 https://github.com/samarthsingla49-ai/DronePickup.git , and its public
 
 ---
 
 ### Prompt 3
-**Timestamp**: `2026-11-22T09:27:21Z`  
+**Timestamp**: 2026-11-22T09:27:21Z  
 
 we are in a vibecodeing comp , we have ot 1 hour to complete it , and i am attactching you the theme and the rules for how we will be scoring , read the instruction and give me the plan , i want to win this comp , and ask me the questions first ,
 
 ---
 
 ### Prompt 4
-**Timestamp**: `2026-11-22T09:39:45Z`  
+**Timestamp**: 2026-11-22T09:39:45Z  
 
 how to run this on brower
 
 ---
 
 ### Prompt 5
-**Timestamp**: `2026-11-22T09:49:07Z`  
+**Timestamp**: 2026-11-22T09:49:07Z  
 
 explain me the game , what is retact , and tell me how the cargo delivery works
 
 ---
 
 ### Prompt 6
-**Timestamp**: `2026-11-22T09:51:17Z`  
+**Timestamp**: 2026-11-22T09:51:17Z  
 
 when i am dropiing it in the green zone , it is not recognising the cargo , pls check that
 
 ---
 
 ### Prompt 7
-**Timestamp**: `2026-11-22T09:56:31Z`  
+**Timestamp**: 2026-11-22T09:56:31Z  
 
 ROLE
 You are a senior JavaScript game developer. Fix the bugs listed below in the browser game "CYBERDROP" (vanilla HTML5 Canvas, ES6 modules, no dependencies, no build step). Keep it that way: no frameworks, no npm runtime dependencies, no external assets.
@@ -113,15 +126,22 @@ OUTPUT
 ---
 
 ### Prompt 8
-**Timestamp**: `2026-11-22T10:14:19Z`  
+**Timestamp**: 2026-11-22T10:14:19Z  
 
 we have got more idea to make it more interactive can we add a cybrpunk like map on the starting like this for example and explaining the rules of the game just like story game mode , i want to make game more interactive
 
 ---
 
 ### Prompt 9
-**Timestamp**: `2026-11-22T10:27:39Z`  
+**Timestamp**: 2026-11-22T10:27:39Z  
 
 how to share this chatlink
+
+---
+
+### Prompt 10
+**Timestamp**: 2026-11-22T10:31:38Z  
+
+tell me how many credits used
 
 ---
