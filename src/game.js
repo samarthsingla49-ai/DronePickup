@@ -285,6 +285,12 @@ export class Game {
         const ackCodexBtn = document.getElementById('ack-codex-btn');
         if (ackCodexBtn) ackCodexBtn.addEventListener('click', closeCodex);
 
+        if (codexModal) {
+            codexModal.addEventListener('click', (e) => {
+                if (e.target === codexModal) closeCodex();
+            });
+        }
+
         // Map Canvas Node Selection
         const mapCanvas = document.getElementById('mapCanvas');
         if (mapCanvas) {

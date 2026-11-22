@@ -184,7 +184,11 @@ body, html {
     transition: opacity 0.3s ease;
 }
 
-.screen.hidden {
+.hidden,
+.screen.hidden,
+.modal-overlay.hidden,
+.hud-overlay.hidden,
+.altitude-warning.hidden {
     display: none !important;
 }
 
