@@ -71,6 +71,8 @@ DronePickup/
 ├── style.css             # Cyberpunk styling, responsive layout, holographic map styles
 ├── play.bat              # Windows batch launcher (starts server & opens browser)
 ├── README.md             # Project documentation and control reference
+├── AI_SESSION.md         # Full prompt trajectory, steering log & competition evaluation records
+├── AI_SESSION.jsonl      # Machine-readable transcript for automated LLM scoring
 └── src/
     ├── audio.js          # Procedural Web Audio API sound synthesizer
     ├── map.js            # Holographic sector campaign map, radar sweep, narrative dispatch
@@ -80,3 +82,11 @@ DronePickup/
     ├── levels.js         # Mission configurations, city obstacles, drop zones, laser paths
     └── game.js           # Core loop, input handling, camera tracking, scoring & grading
 ```
+
+---
+
+## 🤖 AI Session & Steering Record
+
+In accordance with the **Saturnalia 2026 Vibe Coding Scoring Rubric** (`YOUR AI SESSIONS`):
+- **Full Human Steering Log**: [AI_SESSION.md](file:///c:/Users/samar/Desktop/DRONE/AI_SESSION.md) (or on GitHub: [AI_SESSION.md](https://github.com/samarthsingla49-ai/DronePickup/blob/main/AI_SESSION.md)) contains every prompt sent, showing precision steering, architectural constraints, and test-driven validation.
+- **Machine-Readable Raw Trajectory**: `AI_SESSION.jsonl` contains the full JSONL event log for automated evaluation pipelines.
