@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBERDROP: Neo-Tokyo Courier</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- CRT Scanline / Vignette Effect -->
+        <div class="crt-overlay"></div>
+
+        <!-- Audio & Quick Controls Header -->
+        <div class="top-nav">
+            <span class="game-tag">SATURNALIA 2026 // VIBE CODING</span>
+            <button id="mute-btn" class="cyber-btn sm">🔊 SOUND</button>
+        </div>
+
+        <!-- 1. TITLE SCREEN -->
+        <div id="screen-title" class="screen">
+            <div class="title-card">
+                <div class="glitch-title" data-text="CYBERDROP">CYBERDROP</div>
+                <div class="subtitle">NEO-TOKYO CARGO COURIER // 2077</div>
+                <p class="tagline">Fly high-speed quad-rotors. Master swinging tether physics. Deliver fragile cybernetic payloads across stormy neon megacities.</p>
+
+                <div class="controls-cheatsheet">
+                    <div class="control-row">
+                        <span class="key-badge">W / ↑</span>
+                        <span class="desc">Main Thrusters</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="key-badge">A / D or ← / →</span>
+                        <span class="desc">Tilt & Rotate</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="key-badge">SPACE / S / ↓</span>
+                        <span class="desc">Tether Grapple / Release</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="key-badge">Q / E</span>
+                        <span class="desc">Retract / Extend Winch</span>
+                    </div>
+                </div>
+
+                <button id="start-btn" class="cyber-btn primary lg glow-anim">INITIALIZE SYSTEM // START</button>
+            </div>
+        </div>
+
+        <!-- 2. MISSION BRIEFING SCREEN -->
+        <div id="screen-briefing" class="screen hidden">
+            <div class="panel cyber-box">
+                <div class="panel-header">
+                    <span class="terminal-dot"></span>
+                    <span id="brief-codename">OPERATION: FIRST FLIGHT</span>
+                </div>
+                <h2 id="brief-title" class="neon-cyan">DISTRICT 7: THE ROOKIE DROP</h2>
+                <p id="brief-text" class="brief-body"></p>
+
+                <div class="briefing-specs">
+                    <div class="spec-item">
+                        <span class="label">PAYLOAD</span>
+                        <span id="brief-cargo" class="val text-magenta">STANDARD</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label">TIME LIMIT</span>
+                        <span id="brief-time" class="val text-yellow">75s</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="label">WIND ADVISORY</span>
+                        <span id="brief-wind" class="val text-cyan">15 KTS</span>
+                    </div>
+                </div>
+
+                <div class="hint-box">
+                    💡 <strong>Pro Tip:</strong> Hover directly above the cargo and press <code>SPACE</code> to latch. Watch the wind meter and use rooftop <code>⚡ RECHARGE</code> pads to replenish battery!
+                </div>
+
+                <button id="deploy-btn" class="cyber-btn primary">DEPLOY DRONE</button>
+            </div>
+        </div>
+
+        <!-- 3. IN-GAME HUD OVERLAY -->
+        <div id="screen-hud" class="hud-overlay hidden">
+            <!-- Left Gauges -->
+            <div class="hud-group left">
+                <div class="hud-bar-container">
+                    <div class="hud-bar-label">
+                        <span>BATTERY</span>
+                        <span id="hud-battery-val">100%</span>
+                    </div>
+                    <div class="hud-bar-bg">
+                        <div id="hud-battery-fill" class="hud-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div class="hud-bar-container">
+                    <div class="hud-bar-label">
+                        <span>HULL INTEGRITY</span>
+                        <span id="hud-health-val">100%</span>
+                    </div>
+                    <div class="hud-bar-bg">
+                        <div id="hud-health-fill" class="hud-bar-fill health"></div>
+                    </div>
+                </div>
+
+                <div class="hud-status-row">
+                    <span class="hud-label">CARGO:</span>
+                    <span id="hud-cargo-status" class="status-badge unhooked">NO CARGO</span>
+                </div>
+            </div>
+
+            <!-- Center Mission Info -->
+            <div class="hud-group center">
+                <div class="hud-timer-box">
+                    <div class="timer-label">MISSION TIMER</div>
+                    <div id="hud-time" class="timer-digits">75s</div>
+                </div>
+            </div>
+
+            <!-- Right Gauges: Wind & Score -->
+            <div class="hud-group right">
+                <div class="hud-score-box">
+                    <div class="score-label">CREDITS EARNED</div>
+                    <div id="hud-score" class="score-digits">0</div>
+                </div>
+
+                <div class="hud-wind-box">
+                    <span class="hud-label">ATMOSPHERIC WIND</span>
+                    <div class="wind-indicator">
+                        <span id="hud-wind-arrow" class="wind-arrow">➔</span>
+                        <span id="hud-wind-speed" class="wind-speed">0 KTS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. MISSION SUCCESS SCREEN -->
+        <div id="screen-success" class="screen hidden">
+            <div class="panel cyber-box success-box">
+                <div class="panel-header text-green">
+                    <span class="terminal-dot green"></span>
+                    <span>MISSION ACCOMPLISHED // CARGO DELIVERED</span>
+                </div>
+                <div class="grade-banner">
+                    <span class="grade-label">RATING:</span>
+                    <span id="succ-grade" class="grade-letter">S+</span>
+                </div>
+
+                <div class="score-breakdown">
+                    <div class="score-row">
+                        <span>Mission Reward:</span>
+                        <span id="succ-score" class="val">2,500</span>
+                    </div>
+                    <div class="score-row">
+                        <span>Time Bonus:</span>
+                        <span id="succ-time-bonus" class="val text-yellow">+600</span>
+                    </div>
+                    <div class="score-row">
+                        <span>Cargo Integrity Bonus:</span>
+                        <span id="succ-integrity-bonus" class="val text-cyan">+1,000 (100%)</span>
+                    </div>
+                    <div class="score-row">
+                        <span>Battery Reserve Bonus:</span>
+                        <span id="succ-battery-bonus" class="val text-green">+450 (90%)</span>
+                    </div>
+                    <div class="score-row total-row">
+                        <span>Cumulative Score:</span>
+                        <span id="succ-total" class="val text-magenta">4,550</span>
+                    </div>
+                </div>
+
+                <button id="next-btn" class="cyber-btn primary">NEXT MISSION</button>
+            </div>
+        </div>
+
+        <!-- 5. MISSION FAILED / GAME OVER SCREEN -->
+        <div id="screen-gameover" class="screen hidden">
+            <div class="panel cyber-box fail-box">
+                <div class="panel-header text-red">
+                    <span class="terminal-dot red"></span>
+                    <span>CRITICAL FAILURE // CONTRACT TERMINATED</span>
+                </div>
+                <h2 class="neon-red">MISSION FAILED</h2>
+                <p id="fail-reason" class="fail-text"></p>
+
+                <div class="fail-stats">
+                    <span>Total Score Achieved:</span>
+                    <span id="fail-score" class="val">0</span>
+                </div>
+
+                <button id="retry-btn" class="cyber-btn danger">RETRY MISSION (R)</button>
+            </div>
+        </div>
+
+        <!-- 6. FINAL VICTORY SCREEN -->
+        <div id="screen-victory" class="screen hidden">
+            <div class="panel cyber-box victory-box">
+                <div class="panel-header text-cyan">
+                    <span class="terminal-dot cyan"></span>
+                    <span>NEO-TOKYO LOGISTICS // CONTRACT COMPLETED</span>
+                </div>
+                <h1 class="neon-yellow">LEGENDARY COURIER</h1>
+                <p class="vic-body">You conquered all sectors, survived Category-4 cybernetic storms, and safely delivered every high-value payload across Neo-Tokyo.</p>
+                <div class="final-score-box">
+                    <div class="label">FINAL CHAMPIONSHIP SCORE</div>
+                    <div id="vic-total-score" class="score-huge">0</div>
+                </div>
+                <button id="play-again-btn" class="cyber-btn primary lg">PLAY CAMPAIGN AGAIN</button>
+            </div>
+        </div>
+
+        <!-- Mobile / Touch Controls Overlay -->
+        <div id="touch-controls" class="touch-overlay">
+            <div class="touch-left-cluster">
+                <button id="touch-left" class="touch-btn">◀</button>
+                <button id="touch-right" class="touch-btn">▶</button>
+            </div>
+            <div class="touch-right-cluster">
+                <button id="touch-grapple" class="touch-btn action">HOOK</button>
+                <button id="touch-thrust" class="touch-btn primary">▲ THRUST</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (ES6 Modules) -->
+    <script type="module" src="src/game.js"></script>
+</body>
+</html>
