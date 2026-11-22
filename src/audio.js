@@ -17,6 +17,9 @@ class SoundEngine {
         this.windGain = null;
         this.windFilter = null;
 
+        // Cached audio buffers
+        this.crashNoiseBuffer = null;
+
         // Music state
         this.musicPlaying = false;
         this.musicStep = 0;
@@ -139,6 +142,17 @@ class SoundEngine {
         this.windFilter.frequency.setTargetAtTime(targetFreq, now, 0.1);
     }
 
+    stopHum() {
+        if (!this.isInitialized || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        if (this.engineGain) {
+            this.engineGain.gain.setTargetAtTime(0, now, 0.08);
+        }
+        if (this.windGain) {
+            this.windGain.gain.setTargetAtTime(0, now, 0.08);
+        }
+    }
+
     // ------------------------------------------------------------------------
     // One-Shot SFX
     // ------------------------------------------------------------------------
@@ -210,16 +224,18 @@ class SoundEngine {
         if (!this.isInitialized || this.isMuted) return;
         const now = this.ctx.currentTime;
 
-        // Noise burst
-        const bufferSize = this.ctx.sampleRate * 0.5;
-        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
+        // Reusable noise buffer allocation
+        if (!this.crashNoiseBuffer && this.ctx) {
+            const bufferSize = Math.floor(this.ctx.sampleRate * 0.5);
+            this.crashNoiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = this.crashNoiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
         }
 
         const noise = this.ctx.createBufferSource();
-        noise.buffer = noiseBuffer;
+        noise.buffer = this.crashNoiseBuffer;
 
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
@@ -306,7 +322,7 @@ class SoundEngine {
     // Procedural Synthwave BGM Loop
     // ------------------------------------------------------------------------
     startMusic() {
-        if (this.musicPlaying || !this.isInitialized) return;
+        if (this.musicPlaying || this.musicTimer || !this.isInitialized) return;
         this.musicPlaying = true;
         this.musicStep = 0;
         

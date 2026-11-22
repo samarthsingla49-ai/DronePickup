@@ -190,15 +190,6 @@ export class WindSystem {
 // ----------------------------------------------------------------------------
 // Collision Utilities
 // ----------------------------------------------------------------------------
-export function checkAABB(b1, b2) {
-    return (
-        b1.x < b2.x + b2.w &&
-        b1.x + b1.w > b2.x &&
-        b1.y < b2.y + b2.h &&
-        b1.y + b1.h > b2.y
-    );
-}
-
 export function resolveBoxCollision(body, obstacle, restitution = 0.25, friction = 0.85) {
     // Body is { pos: Vector2, vel: Vector2, w: number, h: number }
     // Obstacle is { x, y, w, h }

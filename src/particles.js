@@ -141,25 +141,6 @@ export class ParticleSystem {
         }
     }
 
-    spawnSmoke(x, y, count = 2) {
-        for (let i = 0; i < count; i++) {
-            this.particles.push({
-                x: x + (Math.random() - 0.5) * 10,
-                y: y + (Math.random() - 0.5) * 10,
-                vx: (Math.random() - 0.5) * 30,
-                vy: -30 - Math.random() * 40,
-                ax: 0,
-                ay: -10,
-                size: 5 + Math.random() * 6,
-                sizeChange: 8,
-                color: 'rgba(70, 70, 85, 0.5)',
-                life: 0.5 + Math.random() * 0.3,
-                maxLife: 0.8,
-                glow: false
-            });
-        }
-    }
-
     spawnCelebration(x, y) {
         // Neon confetti burst
         const colors = ['#00f0ff', '#ff0077', '#ffff00', '#00ff88', '#b026ff'];

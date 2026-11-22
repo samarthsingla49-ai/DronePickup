@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CYBERDROP: Neo-Tokyo Courier</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
+    <script>
+        if (location.protocol === 'file:') {
+            window.addEventListener('DOMContentLoaded', () => {
+                const warn = document.createElement('div');
+                warn.id = 'file-protocol-warning';
+                warn.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#ff0044;color:#fff;font-family:sans-serif;padding:12px;text-align:center;font-weight:bold;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.8);';
+                warn.innerHTML = '⚠️ Browser security blocks ES Modules on file:// protocol. Please launch via <code>play.bat</code> or run <code>python -m http.server 8000</code> and open <a href="http://localhost:8000" style="color:#00f0ff;text-decoration:underline;">http://localhost:8000</a>.';
+                document.body.prepend(warn);
+            });
+        }
+    </script>
 </head>
 <body>
     <div id="game-container">
@@ -14,7 +26,7 @@
         <!-- CRT Scanline / Vignette Effect -->
         <div class="crt-overlay"></div>
 
-        <!-- Audio & Quick Controls Header -->
+        <!-- Audio & Quick Controls Header (Positioned top-left to avoid HUD overlap) -->
         <div class="top-nav">
             <span class="game-tag">SATURNALIA 2026 // VIBE CODING</span>
             <button id="mute-btn" class="cyber-btn sm">🔊 SOUND</button>
@@ -25,6 +37,7 @@
             <div class="title-card">
                 <div class="glitch-title" data-text="CYBERDROP">CYBERDROP</div>
                 <div class="subtitle">NEO-TOKYO CARGO COURIER // 2077</div>
+                <div class="high-score-badge">RECORD // BEST SCORE: <span id="title-high-score-val">0</span></div>
                 <p class="tagline">Fly high-speed quad-rotors. Master swinging tether physics. Deliver fragile cybernetic payloads across stormy neon megacities.</p>
 
                 <div class="controls-cheatsheet">
@@ -43,6 +56,14 @@
                     <div class="control-row">
                         <span class="key-badge">Q / E</span>
                         <span class="desc">Retract / Extend Winch</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="key-badge">P / ESC</span>
+                        <span class="desc">Pause Game</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="key-badge">R</span>
+                        <span class="desc">Quick Restart</span>
                     </div>
                 </div>
 
@@ -113,8 +134,9 @@
                 </div>
             </div>
 
-            <!-- Center Mission Info -->
+            <!-- Center Mission Info & Altitude Warning -->
             <div class="hud-group center">
+                <div id="hud-altitude-warning" class="altitude-warning hidden">⚠️ ALTITUDE LIMIT - TURBULENCE CEILING ⚠️</div>
                 <div class="hud-timer-box">
                     <div class="timer-label">MISSION TIMER</div>
                     <div id="hud-time" class="timer-digits">75s</div>
@@ -208,8 +230,22 @@
                 <div class="final-score-box">
                     <div class="label">FINAL CHAMPIONSHIP SCORE</div>
                     <div id="vic-total-score" class="score-huge">0</div>
+                    <div class="vic-record">ALL-TIME BEST RECORD: <span id="vic-high-score-val">0</span></div>
                 </div>
                 <button id="play-again-btn" class="cyber-btn primary lg">PLAY CAMPAIGN AGAIN</button>
+            </div>
+        </div>
+
+        <!-- 7. PAUSE OVERLAY (Task 24) -->
+        <div id="screen-paused" class="screen hidden">
+            <div class="panel cyber-box pause-box">
+                <div class="panel-header text-yellow">
+                    <span class="terminal-dot yellow"></span>
+                    <span>FLIGHT SUSPENDED</span>
+                </div>
+                <h2 class="neon-yellow">SIMULATION PAUSED</h2>
+                <p class="pause-desc">Press P or ESC to resume flight operations.</p>
+                <button id="resume-btn" class="cyber-btn primary">RESUME FLIGHT</button>
             </div>
         </div>
 

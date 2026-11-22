@@ -9,11 +9,10 @@ export const MISSIONS = [
         title: "DISTRICT 7: THE ROOKIE DROP",
         codename: "OPERATION: FIRST FLIGHT",
         briefing: "Welcome to Neo-Tokyo logistics, Courier. Retrieve the standard Cyber-Courier package from the high-rise depot and deliver it safely to Drop Pad Alpha. Watch your tilt and use minimal throttle to conserve battery.",
-        droneStart: { x: 120, y: 380 },
+        droneStart: { x: 120, y: 411 },
         cargo: { x: 260, y: 440, type: 'STANDARD' },
         dropZone: { x: 1250, y: 420, w: 140, h: 25, label: "PAD ALPHA" },
         timeLimit: 75,
-        targetScore: 2500,
         weather: {
             windBase: 8,
             windGust: 15,
@@ -43,12 +42,11 @@ export const MISSIONS = [
         id: 2,
         title: "NEON CANYON: TURBULENCE RUN",
         codename: "OPERATION: VOLATILE CARGO",
-        briefing: "Heavy crosswinds detected between corporate spires. Your cargo is a volatile Plasma Core: high mass, severe swing inertia, and zero tolerance for collisions. Keep it stable or it explodes.",
-        droneStart: { x: 120, y: 240 },
+        briefing: "Heavy crosswinds detected between corporate spires. Your cargo is a volatile Plasma Core: high mass (2.2kg), severe swing inertia, and fragile casing (impact damage begins at 45 px/s). Keep it stable or it ruptures.",
+        droneStart: { x: 120, y: 271 },
         cargo: { x: 280, y: 340, type: 'PLASMA' },
         dropZone: { x: 1380, y: 360, w: 130, h: 25, label: "PAD BETA" },
         timeLimit: 65,
-        targetScore: 4000,
         weather: {
             windBase: -28,
             windGust: 38,
@@ -77,19 +75,18 @@ export const MISSIONS = [
             { x: 1360, y: 385, w: 170, h: 255, color: '#101426', neon: '#00ff66', label: "BETA DROP BASE" }
         ],
         lasers: [
-            { x: 580, y1: 200, y2: 440, speed: 1.8, offset: 0, vertical: true }
+            { x: 580, y1: 200, y2: 440, speed: 1.8, offset: 0 }
         ]
     },
     {
         id: 3,
         title: "CYBER-STORM: THE QUANTUM HEIST",
         codename: "OPERATION: MIDNIGHT SURGE",
-        briefing: "Cat-4 Cyber Storm in effect. Torrential acid rain, shifting gale force winds, and active orbital security scan lasers. Transport the ultra-sensitive Quantum Data Vault across the city before time expires.",
-        droneStart: { x: 100, y: 280 },
+        briefing: "Cat-4 Cyber Storm in effect. Torrential acid rain, shifting gale force winds, and active orbital security scan lasers. Transport the ultra-sensitive Quantum Data Vault (fragile casing, impact damage begins at 30 px/s with 0.45x damage) across the city before time expires.",
+        droneStart: { x: 100, y: 311 },
         cargo: { x: 240, y: 390, type: 'QUANTUM' },
         dropZone: { x: 1420, y: 280, w: 120, h: 25, label: "OMEGA BUNKER" },
         timeLimit: 55,
-        targetScore: 6000,
         weather: {
             windBase: 35,
             windGust: 55,
@@ -117,9 +114,9 @@ export const MISSIONS = [
             { x: 1390, y: 305, w: 180, h: 335, color: '#12162a', neon: '#00ff66', label: "OMEGA RECEPTOR" }
         ],
         lasers: [
-            { x: 400, y1: 170, y2: 380, speed: 2.2, offset: 0, vertical: true },
-            { x: 790, y1: 140, y2: 420, speed: 2.8, offset: Math.PI, vertical: true },
-            { x: 1240, y1: 220, y2: 460, speed: 2.4, offset: 1.5, vertical: true }
+            { x: 400, y1: 170, y2: 380, speed: 2.2, offset: 0 },
+            { x: 790, y1: 140, y2: 420, speed: 2.8, offset: Math.PI },
+            { x: 1240, y1: 220, y2: 460, speed: 2.4, offset: 1.5 }
         ]
     }
 ];

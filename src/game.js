@@ -17,7 +17,6 @@ export class Game {
         // Virtual resolution & scaling
         this.width = 1280;
         this.height = 720;
-        this.scale = 1;
 
         // Camera
         this.camera = new Vector2(0, 0);
@@ -30,6 +29,7 @@ export class Game {
 
         // State Machine
         this.state = 'TITLE'; // TITLE, BRIEFING, PLAYING, LEVEL_SUCCESS, GAME_OVER, VICTORY
+        this.isPaused = false;
         this.currentMissionIndex = 0;
         this.currentMission = MISSIONS[0];
 
@@ -37,15 +37,23 @@ export class Game {
         this.score = 0;
         this.totalScore = 0;
         this.timeLeft = 60;
-        this.combo = 1;
-        this.highScore = parseInt(localStorage.getItem('cyberdrop_highscore') || '0', 10);
+        this.highScore = this.getSavedHighScore();
 
-        // Touch & Key Inputs
+        // Separate Input Maps (merged cleanly each frame)
+        this.keyboardKeys = {};
+        this.touchKeys = {};
+        this.gamepadKeys = {};
         this.keys = {};
         this.gamepadIndex = null;
+        this.gamepadGrapplePressed = false;
 
-        // Drop Zone Stability timer
+        // Cooldowns & Timers
         this.dropStableTimer = 0;
+        this.screenTimeout = null;
+        this.warningCooldown = 0;
+        this.chargePadCooldown = 0;
+        this.droneLaserCooldown = 0;
+        this.cargoLaserCooldown = 0;
         this.failureReason = "";
 
         // Screen shake
@@ -60,26 +68,66 @@ export class Game {
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
+        // Update high score display on title
+        this.updateHighScoreDisplay();
+
         // Start animation loop
         this.lastTime = performance.now();
         requestAnimationFrame((t) => this.loop(t));
     }
 
+    // ------------------------------------------------------------------------
+    // localStorage Safety (Task 11)
+    // ------------------------------------------------------------------------
+    getSavedHighScore() {
+        try {
+            return parseInt(localStorage.getItem('cyberdrop_highscore') || '0', 10) || 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    saveHighScore(score) {
+        try {
+            localStorage.setItem('cyberdrop_highscore', score.toString());
+        } catch (e) {
+            // no-op if blocked
+        }
+    }
+
+    updateHighScoreDisplay() {
+        const titleHighEl = document.getElementById('title-high-score-val');
+        if (titleHighEl) {
+            titleHighEl.textContent = this.highScore.toLocaleString();
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // HiDPI Canvas Scaling (Task 16)
+    // ------------------------------------------------------------------------
     resize() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
 
-        // Maintain 16:9 aspect ratio or fill gracefully
-        this.canvas.width = winW;
-        this.canvas.height = winH;
         this.width = winW;
         this.height = winH;
+
+        this.canvas.width = Math.round(winW * dpr);
+        this.canvas.height = Math.round(winH * dpr);
+        this.canvas.style.width = `${winW}px`;
+        this.canvas.style.height = `${winH}px`;
+
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
+    // ------------------------------------------------------------------------
+    // Event Listeners & Input Handling (Tasks 9, 10, 24)
+    // ------------------------------------------------------------------------
     initEventListeners() {
         // Keyboard
         window.addEventListener('keydown', (e) => {
-            this.keys[e.code] = true;
+            this.keyboardKeys[e.code] = true;
 
             // Audio unlock on user interaction
             audio.init();
@@ -99,10 +147,29 @@ export class Game {
             if (e.code === 'KeyR' && (this.state === 'PLAYING' || this.state === 'GAME_OVER')) {
                 this.restartMission();
             }
+
+            // Pause toggle on KeyP or Escape (Task 24)
+            if (e.code === 'KeyP' || e.code === 'Escape') {
+                if (this.state === 'PLAYING') {
+                    this.togglePause();
+                }
+            }
         });
 
         window.addEventListener('keyup', (e) => {
-            this.keys[e.code] = false;
+            this.keyboardKeys[e.code] = false;
+        });
+
+        // Stuck keys prevention on blur / visibilitychange (Task 10)
+        const clearAllInputs = () => {
+            this.keyboardKeys = {};
+            this.touchKeys = {};
+            this.gamepadKeys = {};
+            this.keys = {};
+        };
+        window.addEventListener('blur', clearAllInputs);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) clearAllInputs();
         });
 
         // Gamepad detection
@@ -124,6 +191,7 @@ export class Game {
         const nextBtn = document.getElementById('next-btn');
         const retryBtn = document.getElementById('retry-btn');
         const playAgainBtn = document.getElementById('play-again-btn');
+        const resumeBtn = document.getElementById('resume-btn');
         const muteBtn = document.getElementById('mute-btn');
 
         if (startBtn) {
@@ -167,6 +235,12 @@ export class Game {
             });
         }
 
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => {
+                this.togglePause();
+            });
+        }
+
         if (muteBtn) {
             muteBtn.addEventListener('click', () => {
                 const muted = audio.toggleMute();
@@ -186,8 +260,8 @@ export class Game {
 
         const bindHold = (elem, keyCode) => {
             if (!elem) return;
-            const start = (e) => { e.preventDefault(); audio.init(); this.keys[keyCode] = true; };
-            const end = (e) => { e.preventDefault(); this.keys[keyCode] = false; };
+            const start = (e) => { e.preventDefault(); audio.init(); this.touchKeys[keyCode] = true; };
+            const end = (e) => { e.preventDefault(); this.touchKeys[keyCode] = false; };
             elem.addEventListener('touchstart', start, { passive: false });
             elem.addEventListener('touchend', end, { passive: false });
             elem.addEventListener('mousedown', start);
@@ -217,42 +291,58 @@ export class Game {
         }
     }
 
-    toggleGrapple() {
+    togglePause() {
         if (this.state !== 'PLAYING') return;
+        this.isPaused = !this.isPaused;
+        const pauseScreen = document.getElementById('screen-paused');
+        if (pauseScreen) {
+            if (this.isPaused) {
+                pauseScreen.classList.remove('hidden');
+                audio.stopHum();
+            } else {
+                pauseScreen.classList.add('hidden');
+            }
+        }
+    }
+
+    toggleGrapple() {
+        if (this.state !== 'PLAYING' || this.isPaused) return;
 
         if (this.drone.latchedCargo) {
             // Release cargo
             this.drone.releaseCargo(audio);
+            // Check immediately for drop-zone delivery upon release
+            this.checkDropZone(0);
         } else {
             // Attempt to latch
             const latched = this.drone.tryLatch(this.cargo, audio, this.particles);
             if (!latched) {
-                // If out of range, show warning or subtle buzz
                 audio.playWarning();
             }
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Gamepad Polling with Safe Optional Chaining (Tasks 8 & 9)
+    // ------------------------------------------------------------------------
     pollGamepad() {
         if (this.gamepadIndex === null) return;
-        const gp = navigator.getGamepads()[this.gamepadIndex];
+        const gp = navigator.getGamepads?.()?.[this.gamepadIndex];
         if (!gp) return;
 
-        // Stick X for tilt
-        const stickX = gp.axes[0];
-        if (stickX < -0.25) this.keys['ArrowLeft'] = true;
-        else if (stickX > 0.25) this.keys['ArrowRight'] = true;
-        else {
-            this.keys['ArrowLeft'] = false;
-            this.keys['ArrowRight'] = false;
-        }
+        // Stick X tilt guard
+        const stickX = (gp.axes && gp.axes.length > 0) ? (gp.axes[0] ?? 0) : 0;
+        this.gamepadKeys['ArrowLeft'] = stickX < -0.25;
+        this.gamepadKeys['ArrowRight'] = stickX > 0.25;
 
-        // Trigger or A button for thrust
-        const thrustPressed = gp.buttons[0].pressed || gp.buttons[7].value > 0.2;
-        this.keys['ArrowUp'] = thrustPressed;
+        // Buttons with safe optional chaining
+        const btn0Pressed = gp.buttons?.[0]?.pressed ?? false;
+        const btn7Val = gp.buttons?.[7]?.value ?? 0;
+        this.gamepadKeys['ArrowUp'] = btn0Pressed || btn7Val > 0.2;
 
-        // B or X button for Grapple
-        if (gp.buttons[1].pressed || gp.buttons[2].pressed) {
+        const btn1Pressed = gp.buttons?.[1]?.pressed ?? false;
+        const btn2Pressed = gp.buttons?.[2]?.pressed ?? false;
+        if (btn1Pressed || btn2Pressed) {
             if (!this.gamepadGrapplePressed) {
                 this.toggleGrapple();
                 this.gamepadGrapplePressed = true;
@@ -262,8 +352,17 @@ export class Game {
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Mission State Transitions (Tasks 6 & 21)
+    // ------------------------------------------------------------------------
     startBriefing(missionIdx) {
+        if (this.screenTimeout) {
+            clearTimeout(this.screenTimeout);
+            this.screenTimeout = null;
+        }
+
         this.state = 'BRIEFING';
+        this.isPaused = false;
         this.currentMissionIndex = missionIdx;
         this.currentMission = MISSIONS[missionIdx];
 
@@ -279,7 +378,13 @@ export class Game {
     }
 
     startMission(missionIdx) {
+        if (this.screenTimeout) {
+            clearTimeout(this.screenTimeout);
+            this.screenTimeout = null;
+        }
+
         this.state = 'PLAYING';
+        this.isPaused = false;
         this.currentMissionIndex = missionIdx;
         this.currentMission = MISSIONS[missionIdx];
 
@@ -290,6 +395,10 @@ export class Game {
         const cargoCfg = this.currentMission.cargo;
         this.cargo = new Cargo(cargoCfg.x, cargoCfg.y, cargoCfg.type);
 
+        // Snap camera immediately to drone position (Task 21)
+        this.camera.x = this.drone.pos.x - this.width / 2;
+        this.camera.y = this.drone.pos.y - this.height / 2;
+
         // Reset Weather & Particles
         const w = this.currentMission.weather;
         this.wind.configure(w.windBase, w.windGust, w.windFreq);
@@ -299,11 +408,18 @@ export class Game {
             this.particles.initRain(2000, 800, 150);
         }
 
-        // Reset Timers
+        // Reset Timers & Cooldowns
         this.timeLeft = this.currentMission.timeLimit;
         this.dropStableTimer = 0;
+        this.warningCooldown = 0;
+        this.chargePadCooldown = 0;
+        this.droneLaserCooldown = 0;
+        this.cargoLaserCooldown = 0;
         this.failureReason = "";
         this.shakeTimer = 0;
+
+        const pauseScreen = document.getElementById('screen-paused');
+        if (pauseScreen) pauseScreen.classList.add('hidden');
 
         this.setScreen('screen-hud');
     }
@@ -324,7 +440,8 @@ export class Game {
             'screen-hud',
             'screen-success',
             'screen-gameover',
-            'screen-victory'
+            'screen-victory',
+            'screen-paused'
         ];
         screens.forEach((id) => {
             const el = document.getElementById(id);
@@ -332,7 +449,6 @@ export class Game {
                 if (id === screenId || (screenId === 'screen-hud' && id === 'screen-hud')) {
                     el.classList.remove('hidden');
                 } else if (screenId !== 'screen-hud' && id === 'screen-hud') {
-                    // Keep HUD hidden when on menus
                     el.classList.add('hidden');
                 } else {
                     el.classList.add('hidden');
@@ -342,31 +458,63 @@ export class Game {
     }
 
     // ------------------------------------------------------------------------
-    // Main Game Loop
+    // Main Game Loop (Tasks 5, 7, 9, 15)
     // ------------------------------------------------------------------------
     loop(timestamp) {
-        const dt = Math.min(0.08, (timestamp - this.lastTime) / 1000);
-        this.lastTime = timestamp;
+        try {
+            const dt = Math.min(0.08, (timestamp - this.lastTime) / 1000);
+            this.lastTime = timestamp;
 
-        this.pollGamepad();
+            // Merge separate input sources (Task 9)
+            this.pollGamepad();
+            const allInputKeys = new Set([
+                ...Object.keys(this.keyboardKeys),
+                ...Object.keys(this.touchKeys),
+                ...Object.keys(this.gamepadKeys)
+            ]);
+            for (const k of allInputKeys) {
+                this.keys[k] = Boolean(this.keyboardKeys[k] || this.touchKeys[k] || this.gamepadKeys[k]);
+            }
 
-        if (this.state === 'PLAYING') {
-            this.update(dt);
+            // Screen Shake decay runs EVERY frame regardless of state (Task 5)
+            if (this.shakeTimer > 0) {
+                this.shakeTimer -= dt;
+            }
+
+            // Particles update EVERY frame regardless of state (Task 5)
+            const windSpeed = (this.state === 'PLAYING' && !this.isPaused) ? this.wind.currentSpeed : 0;
+            this.particles.update(dt, windSpeed, { w: 2000, h: 800 });
+
+            // Stop audio hum when not in active gameplay (Task 15)
+            if (this.state !== 'PLAYING' || this.isPaused) {
+                audio.stopHum();
+            }
+
+            // Gameplay simulation runs ONLY when PLAYING and not paused
+            if (this.state === 'PLAYING' && !this.isPaused) {
+                this.update(dt);
+            }
+
+            this.render();
+        } catch (err) {
+            console.error("Game loop error:", err);
+        } finally {
+            requestAnimationFrame((t) => this.loop(t));
         }
-
-        this.render();
-
-        requestAnimationFrame((t) => this.loop(t));
     }
 
+    // ------------------------------------------------------------------------
+    // Gameplay Simulation Update (Tasks 12, 13, 14, 21, 22)
+    // ------------------------------------------------------------------------
     update(dt) {
         this.timeLeft -= dt;
         this.laserTime += dt;
 
-        // Screen Shake decay
-        if (this.shakeTimer > 0) {
-            this.shakeTimer -= dt;
-        }
+        // Decrement audio & laser cooldowns (Tasks 13, 14)
+        if (this.warningCooldown > 0) this.warningCooldown -= dt;
+        if (this.chargePadCooldown > 0) this.chargePadCooldown -= dt;
+        if (this.droneLaserCooldown > 0) this.droneLaserCooldown -= dt;
+        if (this.cargoLaserCooldown > 0) this.cargoLaserCooldown -= dt;
 
         // 1. Wind & Atmospheric
         this.wind.update(dt);
@@ -386,7 +534,7 @@ export class Game {
         const speedRatio = this.drone.vel.mag() / 300;
         audio.updateEngineSound(this.drone.thrustIntensity, speedRatio);
 
-        // 3. Recharge Pad Detection
+        // 3. Recharge Pad Detection (Task 3)
         this.checkRechargePads(dt);
 
         // 4. Cargo Physics
@@ -399,18 +547,20 @@ export class Game {
                 audio
             );
 
-            // Check if cargo hit damage destroyed it
             if (this.cargo.status === 'DESTROYED') {
                 this.triggerGameOver("Cargo was destroyed from severe structural impacts!");
                 return;
             }
         }
 
-        // 5. Laser Hazard Obstacles
+        // 5. Laser Hazard Obstacles (Task 13)
         this.checkLaserHazards();
 
-        // 6. Check Drop Zone Success Condition
+        // 6. Check Drop Zone Success Condition (Tasks 2, 12)
         this.checkDropZone(dt);
+        if (this.state === 'LEVEL_SUCCESS') {
+            return; // Immediately return so fail checks cannot override success in same frame
+        }
 
         // 7. Check Fail Conditions
         if (this.timeLeft <= 0) {
@@ -428,26 +578,31 @@ export class Game {
             return;
         }
 
-        // 8. Low battery / cargo warning sound pulse
+        // 8. Low battery / cargo warning sound (Task 14 cooldown)
         if (this.drone.battery < 20 || (this.cargo && this.cargo.integrity < 25)) {
-            if (Math.floor(this.timeLeft * 3) % 4 === 0) {
+            if (this.warningCooldown <= 0) {
                 audio.playWarning();
+                this.warningCooldown = 0.5;
             }
         }
 
-        // 9. Update Particles
-        this.particles.update(dt, this.wind.currentSpeed, { w: 2000, h: 800 });
-
-        // 10. Camera Smooth Follow (Lerp)
+        // 9. Camera Smooth Follow (Lerp) & Level Boundary Clamp (Task 21)
         const targetX = this.drone.pos.x - this.width / 2;
         const targetY = this.drone.pos.y - this.height / 2;
         this.camera.x += (targetX - this.camera.x) * Math.min(1.0, 5.0 * dt);
         this.camera.y += (targetY - this.camera.y) * Math.min(1.0, 5.0 * dt);
 
+        // Clamp camera to sensible level bounds
+        this.camera.x = Math.max(-50, Math.min(1850 - this.width, this.camera.x));
+        this.camera.y = Math.max(-100, Math.min(750 - this.height, this.camera.y));
+
         // Update HUD DOM
         this.updateHUD();
     }
 
+    // ------------------------------------------------------------------------
+    // Recharge Pads Detection (Task 3)
+    // ------------------------------------------------------------------------
     checkRechargePads(dt) {
         this.drone.isRecharging = false;
         const pads = this.currentMission.rechargePads || [];
@@ -455,71 +610,117 @@ export class Game {
 
         for (const pad of pads) {
             const inX = droneAnchor.x >= pad.x && droneAnchor.x <= pad.x + pad.w;
-            const inY = Math.abs(droneAnchor.y - pad.y) < 16;
-            const slow = this.drone.vel.mag() < 35;
+            // Generous vertical test allowing both landing and low hovering to recharge
+            const inY = droneAnchor.y >= pad.y - 20 && droneAnchor.y <= pad.y + pad.h + 12;
+            const slow = this.drone.vel.mag() < 50;
 
             if (inX && inY && slow) {
                 this.drone.isRecharging = true;
                 this.drone.battery = Math.min(this.drone.maxBattery, this.drone.battery + 50 * dt);
-                this.particles.spawnSparks(droneAnchor.x, droneAnchor.y, '#00ff88', 2);
-                if (Math.random() < 0.25) audio.playChargePad();
+                this.particles.spawnSparks(droneAnchor.x, pad.y, '#00ff88', 2);
+                if (this.chargePadCooldown <= 0) {
+                    audio.playChargePad();
+                    this.chargePadCooldown = 0.2;
+                }
             }
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Laser Hazards with Rectangle Hitbox & Cooldowns (Task 13)
+    // ------------------------------------------------------------------------
     checkLaserHazards() {
         const lasers = this.currentMission.lasers || [];
         for (const laser of lasers) {
             const range = laser.y2 - laser.y1;
             const laserY = laser.y1 + ((Math.sin(this.laserTime * laser.speed + laser.offset) + 1) / 2) * range;
 
-            // Check drone collision with laser beam point
-            const distDrone = Math.hypot(this.drone.pos.x - laser.x, this.drone.pos.y - laserY);
-            if (distDrone < 25) {
+            const beamLeft = laser.x - 70;
+            const beamRight = laser.x + 70;
+            const beamTop = laserY - 3;
+            const beamBottom = laserY + 3;
+
+            // Check drone collision with laser beam rectangle
+            const droneLeft = this.drone.pos.x - this.drone.w / 2;
+            const droneRight = this.drone.pos.x + this.drone.w / 2;
+            const droneTop = this.drone.pos.y - this.drone.h / 2;
+            const droneBottom = this.drone.pos.y + this.drone.h / 2;
+
+            const hitDrone = (
+                droneRight >= beamLeft &&
+                droneLeft <= beamRight &&
+                droneBottom >= beamTop &&
+                droneTop <= beamBottom
+            );
+
+            if (hitDrone && this.droneLaserCooldown <= 0) {
+                this.droneLaserCooldown = 0.8;
                 this.drone.health = Math.max(0, this.drone.health - 25);
                 this.triggerShake(12, 0.3);
-                this.particles.spawnSparks(this.drone.pos.x, this.drone.pos.y, '#ff0044', 20);
+                this.particles.spawnSparks(this.drone.pos.x, laserY, '#ff0044', 20);
                 audio.playCrash();
             }
 
-            // Check cargo collision with laser
+            // Check cargo collision with laser beam rectangle
             if (this.cargo && this.cargo.status !== 'DELIVERED') {
-                const distCargo = Math.hypot(this.cargo.pos.x - laser.x, this.cargo.pos.y - laserY);
-                if (distCargo < 25) {
+                const cargoLeft = this.cargo.pos.x - this.cargo.w / 2;
+                const cargoRight = this.cargo.pos.x + this.cargo.w / 2;
+                const cargoTop = this.cargo.pos.y - this.cargo.h / 2;
+                const cargoBottom = this.cargo.pos.y + this.cargo.h / 2;
+
+                const hitCargo = (
+                    cargoRight >= beamLeft &&
+                    cargoLeft <= beamRight &&
+                    cargoBottom >= beamTop &&
+                    cargoTop <= beamBottom
+                );
+
+                if (hitCargo && this.cargoLaserCooldown <= 0) {
+                    this.cargoLaserCooldown = 0.8;
                     this.cargo.integrity = Math.max(0, this.cargo.integrity - 35);
-                    this.particles.spawnSparks(this.cargo.pos.x, this.cargo.pos.y, '#ff0044', 20);
+                    this.particles.spawnSparks(this.cargo.pos.x, laserY, '#ff0044', 20);
                     audio.playCrash();
                 }
             }
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Drop Zone Detection & Completion Order (Tasks 2 & 12)
+    // ------------------------------------------------------------------------
     checkDropZone(dt) {
         if (!this.cargo || this.cargo.status === 'DELIVERED') return;
 
         const dz = this.currentMission.dropZone;
         const cPos = this.cargo.pos;
 
-        // Inside horizontal zone
-        const inX = cPos.x >= dz.x + 10 && cPos.x <= dz.x + dz.w - 10;
-        const inY = Math.abs(cPos.y - (dz.y - this.cargo.h / 2)) < 16;
-        const lowSpeed = this.cargo.vel.mag() < 30;
+        // Cargo resting center position is dz.y + dz.h - cargo.h / 2
+        const restingY = dz.y + dz.h - this.cargo.h / 2;
+        const inX = cPos.x >= dz.x + 5 && cPos.x <= dz.x + dz.w - 5;
+        // Accept resting on pad or hovering slightly in the pad band
+        const inY = (Math.abs(cPos.y - restingY) < 14) || (cPos.y >= restingY - 35 && cPos.y <= restingY + 14);
+        const lowSpeed = this.cargo.vel.mag() < 40;
 
         if (inX && inY && lowSpeed) {
             this.dropStableTimer += dt;
-            this.particles.spawnSparks(cPos.x, dz.y, '#00ff88', 2);
+            this.particles.spawnSparks(cPos.x, dz.y + dz.h, '#00ff88', 2);
 
-            // If player releases cargo OR holds stably inside for 0.75s
-            if (!this.drone.latchedCargo || this.dropStableTimer >= 0.75) {
-                this.cargo.status = 'DELIVERED';
+            // Release onto pad or hovering stably
+            if (!this.drone.latchedCargo || this.dropStableTimer >= 0.5) {
+                // Must release cargo first, THEN set status = DELIVERED (Task 12)
                 this.drone.releaseCargo(null);
+                this.cargo.status = 'DELIVERED';
                 this.completeMission();
+                return;
             }
         } else {
             this.dropStableTimer = Math.max(0, this.dropStableTimer - dt * 2);
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Mission Completion & Normalized Grading (Tasks 6, 11, 18)
+    // ------------------------------------------------------------------------
     completeMission() {
         this.state = 'LEVEL_SUCCESS';
         audio.playDeliverySuccess();
@@ -540,15 +741,18 @@ export class Game {
 
         if (this.totalScore > this.highScore) {
             this.highScore = this.totalScore;
-            localStorage.setItem('cyberdrop_highscore', this.highScore.toString());
+            this.saveHighScore(this.highScore);
+            this.updateHighScoreDisplay();
         }
 
-        // Grade
+        // Normalized Grading by realistic maximum score (Task 18)
+        const maxScore = baseValue + (this.currentMission.timeLimit * 35) + (100 * 20) + (100 * 15);
+        const ratio = missionScore / maxScore;
         let grade = 'C';
-        if (missionScore > 4800) grade = 'S+';
-        else if (missionScore > 4000) grade = 'S';
-        else if (missionScore > 3200) grade = 'A';
-        else if (missionScore > 2400) grade = 'B';
+        if (ratio >= 0.70) grade = 'S+';
+        else if (ratio >= 0.58) grade = 'S';
+        else if (ratio >= 0.46) grade = 'A';
+        else if (ratio >= 0.34) grade = 'B';
 
         // Update UI
         document.getElementById('succ-score').textContent = missionScore.toLocaleString();
@@ -558,8 +762,11 @@ export class Game {
         document.getElementById('succ-total').textContent = this.totalScore.toLocaleString();
         document.getElementById('succ-grade').textContent = grade;
 
-        setTimeout(() => {
-            this.setScreen('screen-success');
+        if (this.screenTimeout) clearTimeout(this.screenTimeout);
+        this.screenTimeout = setTimeout(() => {
+            if (this.state === 'LEVEL_SUCCESS') {
+                this.setScreen('screen-success');
+            }
         }, 900);
     }
 
@@ -572,15 +779,25 @@ export class Game {
         document.getElementById('fail-reason').textContent = reason;
         document.getElementById('fail-score').textContent = this.totalScore.toLocaleString();
 
-        setTimeout(() => {
-            this.setScreen('screen-gameover');
+        if (this.screenTimeout) clearTimeout(this.screenTimeout);
+        this.screenTimeout = setTimeout(() => {
+            if (this.state === 'GAME_OVER') {
+                this.setScreen('screen-gameover');
+            }
         }, 800);
     }
 
     showVictory() {
         this.state = 'VICTORY';
         audio.playDeliverySuccess();
+        audio.stopMusic(); // Stop music on victory screen (Task 15)
+
         document.getElementById('vic-total-score').textContent = this.totalScore.toLocaleString();
+        const vicHighEl = document.getElementById('vic-high-score-val');
+        if (vicHighEl) {
+            vicHighEl.textContent = this.highScore.toLocaleString();
+        }
+
         this.setScreen('screen-victory');
     }
 
@@ -645,6 +862,16 @@ export class Game {
             windSpeedEl.textContent = `${Math.abs(spd)} KTS`;
             const rot = spd >= 0 ? 0 : 180;
             windArrowEl.style.transform = `rotate(${rot}deg)`;
+        }
+
+        // Altitude limit warning (Task 22)
+        const altWarnEl = document.getElementById('hud-altitude-warning');
+        if (altWarnEl) {
+            if (this.drone.isAtAltitudeLimit) {
+                altWarnEl.classList.remove('hidden');
+            } else {
+                altWarnEl.classList.add('hidden');
+            }
         }
     }
 
@@ -835,7 +1062,7 @@ export class Game {
             ctx.shadowBlur = 18;
             ctx.lineWidth = 3;
 
-            // Horizontal scanning beam
+            // Horizontal scanning beam matching hitbox width (x ± 70)
             ctx.beginPath();
             ctx.moveTo(laser.x - 70, laserY);
             ctx.lineTo(laser.x + 70, laserY);

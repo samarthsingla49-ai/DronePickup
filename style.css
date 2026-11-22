@@ -75,15 +75,15 @@ body, html {
 }
 
 /* ----------------------------------------------------------------------------
-   Top Nav
+   Top Nav (Positioned top-left to avoid HUD score overlap)
    ---------------------------------------------------------------------------- */
 .top-nav {
     position: absolute;
-    top: 14px;
-    right: 20px;
+    top: 12px;
+    left: 20px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     z-index: 30;
 }
 
@@ -421,6 +421,49 @@ body, html {
     text-shadow: 0 0 25px var(--neon-yellow);
 }
 
+.high-score-badge {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 8px var(--neon-yellow);
+    margin-bottom: 16px;
+    letter-spacing: 1.5px;
+}
+
+.altitude-warning {
+    background: rgba(255, 0, 68, 0.25);
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 3px;
+    text-shadow: 0 0 8px var(--neon-red);
+    margin-bottom: 6px;
+    animation: urgentPulse 0.4s infinite alternate;
+}
+
+.pause-box {
+    border-color: rgba(255, 234, 0, 0.5);
+    text-align: center;
+}
+
+.pause-desc {
+    font-size: 14px;
+    color: #aab9d6;
+    margin: 14px 0 24px 0;
+}
+
+.vic-record {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--neon-yellow);
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
+
 /* ----------------------------------------------------------------------------
    HUD Overlay
    ---------------------------------------------------------------------------- */
@@ -432,7 +475,7 @@ body, html {
     height: 100%;
     pointer-events: none;
     z-index: 20;
-    padding: 20px 24px;
+    padding: 48px 20px 20px 20px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -637,6 +680,33 @@ body, html {
 @media (max-width: 900px), (pointer: coarse) {
     .touch-overlay {
         display: flex;
+    }
+    .hud-overlay {
+        padding: 38px 10px 10px 10px;
+    }
+    .hud-group.left, .hud-group.right {
+        width: 140px;
+        gap: 6px;
+    }
+    .hud-bar-container, .hud-score-box, .hud-wind-box {
+        padding: 4px 8px;
+    }
+    .hud-timer-box {
+        padding: 4px 10px;
+    }
+    .timer-digits {
+        font-size: 18px;
+    }
+    .score-digits {
+        font-size: 15px;
+    }
+    .top-nav {
+        top: 8px;
+        left: 10px;
+        gap: 8px;
+    }
+    .game-tag {
+        font-size: 9px;
     }
 }
 

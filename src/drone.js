@@ -1,6 +1,6 @@
 // ============================================================================
 // CYBERDROP: NEO-TOKYO COURIER - Drone & Cargo Entities
-// Cyberpunk vector rendering, dual-rotor physics, searchlights, cargo handling
+// Cyberpunk vector rendering, flight physics, searchlights, cargo handling
 // ============================================================================
 
 import { Vector2, Tether, resolveBoxCollision } from './physics.js';
@@ -28,6 +28,7 @@ export class Drone {
         this.maxHealth = 100;
         this.health = 100;
         this.isRecharging = false;
+        this.isAtAltitudeLimit = false;
 
         // Visual animation states
         this.rotorSpin = 0;
@@ -48,6 +49,7 @@ export class Drone {
         this.battery = this.maxBattery;
         this.health = this.maxHealth;
         this.isRecharging = false;
+        this.isAtAltitudeLimit = false;
         this.latchedCargo = null;
         this.tether.isActive = false;
         this.tether.restLength = 70;
@@ -80,7 +82,7 @@ export class Drone {
         }
 
         // Main Thrusters (Upward along drone's local vertical axis)
-        if (keys['ArrowUp'] || keys['KeyW'] || keys['SpaceThrust']) {
+        if (keys['ArrowUp'] || keys['KeyW']) {
             this.isThrusting = true;
             this.thrustIntensity = 1.0;
 
@@ -112,10 +114,10 @@ export class Drone {
         }
 
         // Winch Controls
-        if (keys['KeyQ'] || keys['WinchUp']) {
+        if (keys['KeyQ']) {
             this.tether.retract(dt);
         }
-        if (keys['KeyE'] || keys['WinchDown']) {
+        if (keys['KeyE']) {
             this.tether.extend(dt);
         }
     }
@@ -128,6 +130,17 @@ export class Drone {
 
         // Apply Gravity
         this.vel.y += this.gravity * dt;
+
+        // Altitude limit / Storm ceiling (y < 60)
+        this.isAtAltitudeLimit = false;
+        if (this.pos.y < 60) {
+            this.isAtAltitudeLimit = true;
+            this.vel.y += 320 * dt;
+            if (this.pos.y < 25) {
+                this.pos.y = 25;
+                if (this.vel.y < 0) this.vel.y = 0;
+            }
+        }
 
         // Apply Wind
         const windForce = windSystem.getForceAt(this.pos);
@@ -358,8 +371,6 @@ export class Cargo {
     constructor(x, y, type = 'STANDARD') {
         this.pos = new Vector2(x, y);
         this.vel = new Vector2(0, 0);
-        this.angle = 0;
-        this.angularVel = 0;
         this.w = 26;
         this.h = 26;
         this.mass = 1.6;
@@ -369,20 +380,30 @@ export class Cargo {
         this.integrity = 100;
         this.value = 1000;
 
+        // Damage threshold & fragility multiplier
+        this.impactThreshold = 65;
+        this.damageMultiplier = 0.22;
+
         // Configure by cargo type
         if (type === 'PLASMA') {
             this.mass = 2.2;
             this.value = 1800;
             this.color = '#ff0055';
             this.label = 'PLASMA CORE';
+            this.impactThreshold = 45;
+            this.damageMultiplier = 0.35;
         } else if (type === 'QUANTUM') {
             this.mass = 1.3;
             this.value = 2500;
             this.color = '#b026ff';
             this.label = 'QUANTUM DATA';
+            this.impactThreshold = 30;
+            this.damageMultiplier = 0.45;
         } else {
             this.color = '#ffaa00';
             this.label = 'CYBER COURIER';
+            this.impactThreshold = 65;
+            this.damageMultiplier = 0.22;
         }
     }
 
@@ -411,8 +432,8 @@ export class Cargo {
         const bodyObj = { pos: this.pos, vel: this.vel, w: this.w, h: this.h };
         for (const obs of obstacles) {
             const col = resolveBoxCollision(bodyObj, obs, 0.15, 0.85);
-            if (col && col.impactSpeed > 65) {
-                const dmg = (col.impactSpeed - 65) * 0.22;
+            if (col && col.impactSpeed > this.impactThreshold) {
+                const dmg = (col.impactSpeed - this.impactThreshold) * this.damageMultiplier;
                 this.integrity = Math.max(0, this.integrity - dmg);
 
                 if (particles) {
@@ -434,7 +455,6 @@ export class Cargo {
 
         ctx.save();
         ctx.translate(this.pos.x, this.pos.y);
-        ctx.rotate(this.angle);
 
         // Container Shadow & Glow
         ctx.shadowColor = this.color;
