@@ -8,6 +8,7 @@ import { Vector2, WindSystem } from './physics.js';
 import { ParticleSystem } from './particles.js';
 import { Drone, Cargo } from './drone.js';
 import { MISSIONS } from './levels.js';
+import { SectorMap } from './map.js';
 
 export class Game {
     constructor() {
@@ -26,6 +27,9 @@ export class Game {
         this.particles = new ParticleSystem();
         this.drone = new Drone(100, 300);
         this.cargo = null;
+
+        // Sector Campaign Map
+        this.sectorMap = new SectorMap(this);
 
         // State Machine
         this.state = 'TITLE'; // TITLE, BRIEFING, PLAYING, LEVEL_SUCCESS, GAME_OVER, VICTORY
@@ -119,6 +123,10 @@ export class Game {
         this.canvas.style.height = `${winH}px`;
 
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        if (this.sectorMap) {
+            this.sectorMap.resize();
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -200,6 +208,91 @@ export class Game {
                 audio.resume();
                 audio.startMusic();
                 this.startBriefing(0);
+            });
+        }
+
+        const titleMapBtn = document.getElementById('title-map-btn');
+        if (titleMapBtn) {
+            titleMapBtn.addEventListener('click', () => {
+                audio.init();
+                audio.resume();
+                audio.startMusic();
+                this.showMap();
+            });
+        }
+
+        const mapBackBtn = document.getElementById('map-back-btn');
+        if (mapBackBtn) {
+            mapBackBtn.addEventListener('click', () => {
+                this.setScreen('screen-title');
+                this.state = 'TITLE';
+            });
+        }
+
+        const mapLaunchBtn = document.getElementById('map-launch-btn');
+        if (mapLaunchBtn) {
+            mapLaunchBtn.addEventListener('click', () => {
+                this.startBriefing(this.sectorMap.selectedSector);
+            });
+        }
+
+        const briefMapBtn = document.getElementById('brief-map-btn');
+        if (briefMapBtn) {
+            briefMapBtn.addEventListener('click', () => {
+                this.showMap();
+            });
+        }
+
+        const returnMapBtn = document.getElementById('return-map-btn');
+        if (returnMapBtn) {
+            returnMapBtn.addEventListener('click', () => {
+                this.showMap();
+            });
+        }
+
+        const failMapBtn = document.getElementById('fail-map-btn');
+        if (failMapBtn) {
+            failMapBtn.addEventListener('click', () => {
+                this.showMap();
+            });
+        }
+
+        const vicMapBtn = document.getElementById('vic-map-btn');
+        if (vicMapBtn) {
+            vicMapBtn.addEventListener('click', () => {
+                this.showMap();
+            });
+        }
+
+        // Codex & Rules Modal
+        const codexModal = document.getElementById('modal-codex');
+        const openCodex = () => {
+            if (codexModal) codexModal.classList.remove('hidden');
+        };
+        const closeCodex = () => {
+            if (codexModal) codexModal.classList.add('hidden');
+        };
+
+        const titleCodexBtn = document.getElementById('title-codex-btn');
+        if (titleCodexBtn) titleCodexBtn.addEventListener('click', openCodex);
+
+        const mapCodexBtn = document.getElementById('map-codex-btn');
+        if (mapCodexBtn) mapCodexBtn.addEventListener('click', openCodex);
+
+        const closeCodexBtn = document.getElementById('close-codex-btn');
+        if (closeCodexBtn) closeCodexBtn.addEventListener('click', closeCodex);
+
+        const ackCodexBtn = document.getElementById('ack-codex-btn');
+        if (ackCodexBtn) ackCodexBtn.addEventListener('click', closeCodex);
+
+        // Map Canvas Node Selection
+        const mapCanvas = document.getElementById('mapCanvas');
+        if (mapCanvas) {
+            mapCanvas.addEventListener('click', (e) => {
+                const rect = mapCanvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                this.sectorMap.selectNodeAt(clickX, clickY);
             });
         }
 
@@ -433,9 +526,21 @@ export class Game {
         this.shakeTimer = duration;
     }
 
+    showMap() {
+        this.state = 'MAP';
+        this.isPaused = false;
+        audio.startMusic();
+        this.setScreen('screen-map');
+        if (this.sectorMap) {
+            this.sectorMap.resize();
+            this.sectorMap.updateDetailPanel();
+        }
+    }
+
     setScreen(screenId) {
         const screens = [
             'screen-title',
+            'screen-map',
             'screen-briefing',
             'screen-hud',
             'screen-success',
@@ -488,6 +593,12 @@ export class Game {
             // Stop audio hum when not in active gameplay (Task 15)
             if (this.state !== 'PLAYING' || this.isPaused) {
                 audio.stopHum();
+            }
+
+            // If in Campaign Map state, update and render map
+            if (this.state === 'MAP' && this.sectorMap) {
+                this.sectorMap.update(dt);
+                this.sectorMap.render();
             }
 
             // Gameplay simulation runs ONLY when PLAYING and not paused
@@ -761,6 +872,12 @@ export class Game {
         document.getElementById('succ-battery-bonus').textContent = `+${batteryBonus} (${Math.round(this.drone.battery)}%)`;
         document.getElementById('succ-total').textContent = this.totalScore.toLocaleString();
         document.getElementById('succ-grade').textContent = grade;
+
+        // Update Sector Map progression (unlock next sector & save grade)
+        if (this.sectorMap) {
+            this.sectorMap.unlockNextSector(this.currentMissionIndex);
+            this.sectorMap.saveMissionGrade(this.currentMissionIndex, grade, missionScore);
+        }
 
         if (this.screenTimeout) clearTimeout(this.screenTimeout);
         this.screenTimeout = setTimeout(() => {

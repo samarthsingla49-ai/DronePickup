@@ -1,6 +1,6 @@
 # 🛸 CYBERDROP: NEO-TOKYO COURIER // 2077
 
-> **Browser-based Drone Pick-and-Drop Action Game**  
+> **Browser-based Drone Pick-and-Drop Action Game with Story Mode & Interactive Campaign Map**  
 > *Zero runtime dependencies, pure HTML5 Canvas & ES6 modules.*
 
 ---
@@ -24,9 +24,16 @@ Browsers restrict ES module loading over the `file://` protocol. Run the game vi
 
 ---
 
-## 🎯 Gameplay Overview
+## 🗺️ Story Mode & Holographic Campaign Map
 
-Fly an agile quad-rotor courier drone through futuristic megacity canyons, pick up high-value cargo with an elastic tether winch, and safely touch down on designated rooftop drop zones.
+The game features an interactive **Neo-Tokyo Sector Overworld Map**:
+- **Interactive Holographic Sectors:** Click between unlocked city sectors (Sector 01: District 7, Sector 02: Neon Canyon, Sector 03: Omega Megaplex) with animated radar sweep, territory grids, and pulsating data conduits.
+- **Campaign Progression & Star Ratings:** Completing contracts awards grades (`S+`, `S`, `A`, `B`) and unlocks subsequent restricted airspace routes.
+- **Pilot Codex & Story Manual:** Click `📖 RULES & CODEX` on the Title screen or Campaign Map to view interactive tactical briefings on flight mechanics, tether dynamics, winch operations, solar recharge pads, and laser hazard mitigation.
+
+---
+
+## 🎯 Gameplay Mechanics
 
 - **Simplified 2D Rigid-Body Flight Model:** Realistic inertia, rotational tilt, gravity, atmospheric drag, and visual thruster plumes.
 - **Elastic Spring-Damper Tether:** Cargo sways dynamically on a cable underneath the drone, affecting momentum and flight balance.
@@ -60,12 +67,13 @@ Fly an agile quad-rotor courier drone through futuristic megacity canyons, pick 
 
 ```
 DronePickup/
-├── index.html            # Main entry point, HUD overlay, screen states
-├── style.css             # Cyberpunk styling, responsive layout, CRT scanline overlay
+├── index.html            # Main entry point, HUD overlay, screen states, story codex modal
+├── style.css             # Cyberpunk styling, responsive layout, holographic map styles
 ├── play.bat              # Windows batch launcher (starts server & opens browser)
 ├── README.md             # Project documentation and control reference
 └── src/
     ├── audio.js          # Procedural Web Audio API sound synthesizer
+    ├── map.js            # Holographic sector campaign map, radar sweep, narrative dispatch
     ├── physics.js        # Vector2 math, rigid-body dynamics, tether winch, wind system
     ├── particles.js      # Rotor downwash, thruster flame, sparks, confetti celebration
     ├── drone.js          # Drone flight physics, chassis rendering, cargo entity

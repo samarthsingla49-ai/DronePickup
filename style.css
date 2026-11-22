@@ -771,3 +771,277 @@ body, html {
 .neon-cyan { color: var(--neon-cyan); text-shadow: 0 0 14px var(--neon-cyan); }
 .neon-yellow { color: var(--neon-yellow); text-shadow: 0 0 14px var(--neon-yellow); }
 .neon-red { color: var(--neon-red); text-shadow: 0 0 14px var(--neon-red); }
+
+
+/* ============================================================================
+   Campaign Sector Map & Codex Modal Styling
+   ============================================================================ */
+#screen-map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #080c16;
+    z-index: 24;
+}
+
+#mapCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+.map-nav-header {
+    position: absolute;
+    top: 14px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 30;
+}
+
+.map-header-left, .map-header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.map-title-tag {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.map-hint-banner {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #8899bb;
+    background: rgba(10, 14, 26, 0.7);
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    pointer-events: none;
+    z-index: 28;
+}
+
+.map-intel-drawer {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 620px;
+    padding: 20px 24px;
+    background: rgba(10, 15, 28, 0.9);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(0, 240, 255, 0.08);
+    pointer-events: auto;
+    z-index: 30;
+}
+
+.intel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+}
+
+.grade-tag {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.grade-tag.cleared {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-green);
+}
+
+.grade-tag.available {
+    background: rgba(255, 234, 0, 0.2);
+    color: var(--neon-yellow);
+    border: 1px solid var(--neon-yellow);
+}
+
+.grade-tag.locked {
+    background: rgba(70, 80, 100, 0.25);
+    color: #778899;
+    border: 1px solid #445566;
+}
+
+.intel-lore {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #aab9d6;
+    margin: 8px 0 14px 0;
+}
+
+.intel-specs {
+    display: flex;
+    gap: 24px;
+    background: rgba(8, 12, 22, 0.6);
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.intel-spec-row .lbl {
+    color: #6a7c99;
+    margin-right: 6px;
+}
+
+.intel-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.cyber-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #445566;
+    color: #667788;
+    box-shadow: none;
+}
+
+/* ----------------------------------------------------------------------------
+   Modal Codex / Story Rules
+   ---------------------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(4, 6, 12, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal-box {
+    width: 90%;
+    max-width: 720px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px 32px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.close-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--neon-cyan);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.codex-section.lore {
+    background: rgba(0, 240, 255, 0.05);
+    border-left: 3px solid var(--neon-cyan);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+}
+
+.codex-section.lore h4 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--neon-cyan);
+    margin-bottom: 6px;
+}
+
+.codex-section.lore p {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #b0c0dd;
+}
+
+.codex-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.codex-card {
+    background: rgba(14, 20, 36, 0.7);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    padding: 14px 16px;
+    border-radius: 4px;
+}
+
+.codex-card .card-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.codex-card h5 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--neon-yellow);
+    margin-bottom: 6px;
+}
+
+.codex-card p {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #99aacc;
+}
+
+.title-action-buttons, .briefing-buttons, .success-actions, .fail-actions, .victory-actions {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    align-items: center;
+    margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+    .codex-grid {
+        grid-template-columns: 1fr;
+    }
+    .map-intel-drawer {
+        padding: 14px 16px;
+        bottom: 12px;
+    }
+    .intel-lore {
+        font-size: 12px;
+    }
+}

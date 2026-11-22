@@ -67,7 +67,57 @@
                     </div>
                 </div>
 
-                <button id="start-btn" class="cyber-btn primary lg glow-anim">INITIALIZE SYSTEM // START</button>
+                <div class="title-action-buttons">
+                    <button id="start-btn" class="cyber-btn primary lg glow-anim">INITIALIZE SYSTEM // START</button>
+                    <button id="title-map-btn" class="cyber-btn lg">🗺️ SECTOR CAMPAIGN MAP</button>
+                    <button id="title-codex-btn" class="cyber-btn sm">📖 PILOT CODEX & RULES</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1.5. CAMPAIGN SECTOR MAP SCREEN -->
+        <div id="screen-map" class="screen hidden">
+            <canvas id="mapCanvas"></canvas>
+            
+            <!-- Map Navigation Header -->
+            <div class="map-nav-header">
+                <div class="map-header-left">
+                    <button id="map-back-btn" class="cyber-btn sm">◀ TITLE</button>
+                    <span class="map-title-tag">NEO-TOKYO AIRSPACE // SECTOR CAMPAIGN</span>
+                </div>
+                <div class="map-header-right">
+                    <button id="map-codex-btn" class="cyber-btn sm">📖 RULES & CODEX</button>
+                </div>
+            </div>
+
+            <!-- Map Instruction Tip -->
+            <div class="map-hint-banner">
+                <span>📍 CLICK A SECTOR NODE ON THE HOLOGRAPHIC MAP TO SELECT FLIGHT CONTRACT</span>
+            </div>
+
+            <!-- Interactive Sector Intel Drawer -->
+            <div class="map-intel-drawer cyber-box">
+                <div class="intel-header">
+                    <span id="map-detail-code" class="text-cyan">DEPOT ALPHA</span>
+                    <span id="map-detail-grade" class="grade-tag available">STATUS: OPEN</span>
+                </div>
+                <h3 id="map-detail-title" class="neon-yellow">SECTOR 01: DISTRICT 7</h3>
+                <p id="map-detail-lore" class="intel-lore">Retrieving courier components...</p>
+
+                <div class="intel-specs">
+                    <div class="intel-spec-row">
+                        <span class="lbl">CARGO PAYLOAD:</span>
+                        <span id="map-detail-cargo" class="val text-magenta">STANDARD</span>
+                    </div>
+                    <div class="intel-spec-row">
+                        <span class="lbl">AIRSPACE HAZARDS:</span>
+                        <span id="map-detail-danger" class="val text-cyan">LOW THREAT</span>
+                    </div>
+                </div>
+
+                <div class="intel-actions">
+                    <button id="map-launch-btn" class="cyber-btn primary">DEPLOY TO SECTOR</button>
+                </div>
             </div>
         </div>
 
@@ -100,7 +150,10 @@
                     💡 <strong>Pro Tip:</strong> Hover directly above the cargo and press <code>SPACE</code> to latch. Watch the wind meter and use rooftop <code>⚡ RECHARGE</code> pads to replenish battery!
                 </div>
 
-                <button id="deploy-btn" class="cyber-btn primary">DEPLOY DRONE</button>
+                <div class="briefing-buttons">
+                    <button id="brief-map-btn" class="cyber-btn sm">◀ MAP</button>
+                    <button id="deploy-btn" class="cyber-btn primary">DEPLOY DRONE</button>
+                </div>
             </div>
         </div>
 
@@ -195,7 +248,10 @@
                     </div>
                 </div>
 
-                <button id="next-btn" class="cyber-btn primary">NEXT MISSION</button>
+                <div class="success-actions">
+                    <button id="return-map-btn" class="cyber-btn">RETURN TO SECTOR MAP</button>
+                    <button id="next-btn" class="cyber-btn primary">NEXT MISSION</button>
+                </div>
             </div>
         </div>
 
@@ -214,7 +270,10 @@
                     <span id="fail-score" class="val">0</span>
                 </div>
 
-                <button id="retry-btn" class="cyber-btn danger">RETRY MISSION (R)</button>
+                <div class="fail-actions">
+                    <button id="fail-map-btn" class="cyber-btn sm">SECTOR MAP</button>
+                    <button id="retry-btn" class="cyber-btn danger">RETRY MISSION (R)</button>
+                </div>
             </div>
         </div>
 
@@ -232,7 +291,10 @@
                     <div id="vic-total-score" class="score-huge">0</div>
                     <div class="vic-record">ALL-TIME BEST RECORD: <span id="vic-high-score-val">0</span></div>
                 </div>
-                <button id="play-again-btn" class="cyber-btn primary lg">PLAY CAMPAIGN AGAIN</button>
+                <div class="victory-actions">
+                    <button id="vic-map-btn" class="cyber-btn">SECTOR MAP</button>
+                    <button id="play-again-btn" class="cyber-btn primary lg">PLAY CAMPAIGN AGAIN</button>
+                </div>
             </div>
         </div>
 
@@ -246,6 +308,56 @@
                 <h2 class="neon-yellow">SIMULATION PAUSED</h2>
                 <p class="pause-desc">Press P or ESC to resume flight operations.</p>
                 <button id="resume-btn" class="cyber-btn primary">RESUME FLIGHT</button>
+            </div>
+        </div>
+
+        <!-- 8. PILOT CODEX & STORY RULES MODAL -->
+        <div id="modal-codex" class="modal-overlay hidden">
+            <div class="modal-box cyber-box">
+                <div class="modal-header">
+                    <span class="neon-cyan">📖 NEO-TOKYO COURIER // PILOT CODEX & RULES</span>
+                    <button id="close-codex-btn" class="close-icon-btn">✖</button>
+                </div>
+                <div class="modal-content">
+                    <div class="codex-section lore">
+                        <h4>// THE STORY //</h4>
+                        <p>In 2077, Neo-Tokyo's ground avenues are fractured by acid storms and megacorp blockades. As an autonomous Courier Pilot, you are the skyline's only lifeline. Fly through restricted airspace, latch high-value payloads, and deliver them safely to rooftop receptor pads.</p>
+                    </div>
+
+                    <div class="codex-grid">
+                        <div class="codex-card">
+                            <div class="card-icon">🕹️</div>
+                            <h5>1. FLIGHT & TILT</h5>
+                            <p><strong>W / ↑</strong> fires main thrusters. <strong>A / D or ← / →</strong> tilts the chassis. Conserve battery with gentle bursts.</p>
+                        </div>
+                        <div class="codex-card">
+                            <div class="card-icon">🧲</div>
+                            <h5>2. TETHER & WINCH</h5>
+                            <p><strong>SPACE</strong> latches or releases cargo. Press <strong>Q</strong> to <em>Retract</em> (shortens cable to stop swing), press <strong>E</strong> to <em>Extend</em> (smooth landings).</p>
+                        </div>
+                        <div class="codex-card">
+                            <div class="card-icon">📦</div>
+                            <h5>3. CARGO DELIVERY</h5>
+                            <p>Fly cargo into the green rooftop pad. Touch down gently (&lt; 40 px/s). Release with <strong>SPACE</strong> or settle for 0.5s to score!</p>
+                        </div>
+                        <div class="codex-card">
+                            <div class="card-icon">⚡</div>
+                            <h5>4. RECHARGE STATIONS</h5>
+                            <p>Low power? Land or hover low over green <strong>⚡ RECHARGE</strong> rooftop pads to restore 100% battery in 2 seconds.</p>
+                        </div>
+                        <div class="codex-card">
+                            <div class="card-icon">⚠️</div>
+                            <h5>5. HAZARD MATRIX</h5>
+                            <p>Avoid orbital security scan lasers (red beams). Flying above altitude <strong>y &lt; 60</strong> triggers turbulent storm ceilings.</p>
+                        </div>
+                        <div class="codex-card">
+                            <div class="card-icon">★</div>
+                            <h5>6. SCORING & GRADES</h5>
+                            <p>Earn credits based on Cargo Value + Time Left + Cargo Integrity + Battery Left. High ratios award <strong>S+ / S / A</strong> grades!</p>
+                        </div>
+                    </div>
+                </div>
+                <button id="ack-codex-btn" class="cyber-btn primary">ACKNOWLEDGE & RESUME</button>
             </div>
         </div>
 
